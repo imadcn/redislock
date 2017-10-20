@@ -5,8 +5,8 @@
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<name>${project.groupId}:${project.artifactId}</name>
-	<description>zookeeper/snowflake based id generator tools</description>
-	<url>https://github.com/imadcn/idworker</url>
+	<description>distributed redis reentrant lock</description>
+	<url>https://github.com/imadcn/redislock</url>
 
 	<developers>
 		<developer>
@@ -25,9 +25,9 @@
 	</licenses>
 
 	<scm>
-		<url>https://github.com/imadcn/idworker.git</url>
-		<connection>scm:https://github.com/imadcn/idworker.git</connection>
-		<developerConnection>scm:https://github.com/imadcn/idworker.git</developerConnection>
+		<url>https://github.com/imadcn/redislock.git</url>
+		<connection>scm:https://github.com/imadcn/redislock.git</connection>
+		<developerConnection>scm:https://github.com/imadcn/redislock.git</developerConnection>
 	</scm>
 
 	<properties>
