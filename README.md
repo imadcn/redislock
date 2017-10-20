@@ -1,12 +1,12 @@
-## idworker - 基于zookeeper，snowflake的分布式统一ID生成工具
+## redislock - 基于redis的分布式可重入锁
 
-[![Build Status](https://travis-ci.org/imadcn/idworker.svg?branch=master)](https://travis-ci.org/imadcn/idworker)
-[![Coverage Status](https://coveralls.io/repos/github/imadcn/idworker/badge.svg?branch=master)](https://coveralls.io/github/imadcn/idworker?branch=master)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/idworker/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/idworker)
+[![Build Status](https://travis-ci.org/imadcn/redislock.svg?branch=master)](https://travis-ci.org/imadcn/redislock)
+[![Coverage Status](https://coveralls.io/repos/github/imadcn/redislock/badge.svg?branch=master)](https://coveralls.io/github/imadcn/redislock?branch=master)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/redislock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/redislock)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 ### 是什么？
-idworker 是一个基于zookeeper和snowflake算法的分布式统一ID生成工具，通过zookeeper自动注册机器（最多1024台），无需手动指定workerId和datacenterId
+redislock 是一个基于Redis的分布式可重入锁
 
 ### 怎么用？
 #### Maven
@@ -14,8 +14,8 @@ idworker 是一个基于zookeeper和snowflake算法的分布式统一ID生成工
 ```xml
 <dependency>
   <groupId>com.imadcn.framework</groupId>
-  <artifactId>idworker</artifactId>
-  <version>1.0.1</version>
+  <artifactId>redislock</artifactId>
+  <version>0.0.1</version>
 </dependency>
 ```
 
@@ -23,17 +23,53 @@ idworker 是一个基于zookeeper和snowflake算法的分布式统一ID生成工
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:idworker="http://code.imadcn.com/schema/idworker"
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p" xmlns:lock="http://code.imadcn.com/schema/lock"
 	xsi:schemaLocation="
-        http://www.springframework.org/schema/beans 
-        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://code.imadcn.com/schema/idworker
-        http://code.imadcn.com/schema/idworker/idworker.xsd">
-        
-    <idworker:registry id="zkRegistryCenter" server-lists="host1:port1,host2:port2"/>
-    <idworker:generator id="snowflakeGenerator" registry-center-ref="zkRegistryCenter" />
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://code.imadcn.com/schema/lock
+		http://code.imadcn.com/schema/lock/lock.xsd">
+		
+	<!-- redis pool -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="true" />
+	</bean>
+
+	<!-- redis sentinel -->
+	<bean id="redisSentinelConfig" class="com.imadcn.framework.lock.config.RedisSentinelConfig">
+		<property name="masterName" value="mymaster" />
+		<property name="sentinelAddrs" value="127.0.0.1:26380,127.0.0.1:26381,127.0.0.1:26382" />
+	</bean>
+
+	<!-- redis connectionFactory -->
+	<bean id="connectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory" destroy-method="destroy">
+		<constructor-arg index="0" ref="redisSentinelConfig" />
+		<constructor-arg index="1" ref="jedisPoolConfig" />
+	</bean>
+
+	<bean id="stringRedisSerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+	<bean id="jdkSerializationRedisSerializer" class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+
+	<!-- redisTemplate -->
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="keySerializer" ref="stringRedisSerializer" />
+		<property name="valueSerializer" ref="stringRedisSerializer" />
+		<property name="hashKeySerializer" ref="stringRedisSerializer" />
+		<property name="hashValueSerializer" ref="stringRedisSerializer" />
+		<property name="stringSerializer" ref="stringRedisSerializer" />
+	</bean>
+	
+	<!-- redisMessageListenerContainer -->
+	<bean id="redisMessageListenerContainer" class="org.springframework.data.redis.listener.RedisMessageListenerContainer">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="topicSerializer" ref="stringRedisSerializer" />
+	</bean>
+	
+	<lock:config id="lockManager" group="physical-exam" redisTemplate="redisTemplate" messageContainer="redisMessageListenerContainer"/>
 </beans>
 
 ```
@@ -42,34 +78,22 @@ idworker 是一个基于zookeeper和snowflake算法的分布式统一ID生成工
 
 ```java
 @Autowired
-public IdGenerator generator;
+private RedisLockManager manager;
 
-public void id() {
-    long id = generator.nextId();
-    long[] ids = generator.nextId(100_000);
-}
+public void lock() {
+	RedisLock redisLock = manager.getLock("asd");
+	redisLock.lock();
+	redisLock.unlock();
+} 
 
 ```
 
 ### 配置参考
-#### <idworker:registry /> 注册中心配置，如zookeeper
+#### <redislock:config /> redislock配置
 
 |属性|类型|必填|缺省值|描述|
 |:------|:------|:------|:------|:------|
 |id|String|是| |Spring容器中的ID|
-|server-lists|String|是| |连接Zookeeper服务器的列表<br/>包括IP地址和端口号<br/>多个地址用逗号分隔<br/>如: host1:2181,host2:2181|
-|namespace|String|否|idworker|Zookeeper的命名空间|
-|base-sleep-time-milliseconds|int|否|1000|等待重试的间隔时间的初始值<br/>单位：毫秒|
-|max-sleep-time-milliseconds|int|否|3000|等待重试的间隔时间的最大值<br/>单位：毫秒|
-|max-retries|int|否|3|最大重试次数|
-|session-timeout-milliseconds|int|否|60000|会话超时时间<br/>单位：毫秒|
-|connection-timeout-milliseconds|int|否|15000|连接超时时间<br/>单位：毫秒|
-|digest|String|否| |连接Zookeeper的权限令牌<br/>缺省为不需要权限验证|
-
-#### <idworker:generator /> ID生成策略配置
-
-|属性|类型|必填|缺省值|描述|
-|:------|:------|:------|:------|:------|
-|id|String|是| |Spring容器中的ID|
-|registry-center-ref|String|是| |注册中心SpringBeanRef|
-|group|String|否|default|分组名，可以为不同业务分配分组，独立注册|
+|group|String|是| |分组名，可以为不同业务分配分组|
+|redisTemplate|String|是| |redisTemplate|
+|messageContainer|int|是| |RedisMessageListenerContainer|
