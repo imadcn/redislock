@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/imadcn/redislock.svg?branch=master)](https://travis-ci.org/imadcn/redislock)
 [![Coverage Status](https://coveralls.io/repos/github/imadcn/redislock/badge.svg?branch=master)](https://coveralls.io/github/imadcn/redislock?branch=master)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/redislock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/redislock)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/lock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/lock)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 ### 是什么
@@ -14,7 +14,7 @@ redislock 是一个基于Redis的分布式可重入锁
 ```xml
 <dependency>
   <groupId>com.imadcn.framework</groupId>
-  <artifactId>redislock</artifactId>
+  <artifactId>lock</artifactId>
   <version>0.0.1</version>
 </dependency>
 ```
