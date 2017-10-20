@@ -5,10 +5,10 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/redislock/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.imadcn.framework/redislock)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
-### 是什么？
+### 是什么
 redislock 是一个基于Redis的分布式可重入锁
 
-### 怎么用？
+### 怎么用
 #### Maven
 
 ```xml
@@ -89,7 +89,7 @@ public void lock() {
 ```
 
 ### 配置参考
-#### <redislock:config /> redislock配置
+#### <redislock:config /> redislock 配置
 
 |属性|类型|必填|缺省值|描述|
 |:------|:------|:------|:------|:------|
