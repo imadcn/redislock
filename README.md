@@ -96,4 +96,4 @@ public void lock() {
 |id|String|是| |Spring容器中的ID|
 |group|String|是| |分组名，可以为不同业务分配分组|
 |redisTemplate|String|是| |redisTemplate|
-|messageContainer|int|是| |RedisMessageListenerContainer|
+|messageContainer|String|是| |RedisMessageListenerContainer|
