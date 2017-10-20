@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,7 +16,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
  * @author yc
  * @since 2017年1月16日
  */
-public class RedisLockManager {
+public class RedisLockManager implements InitializingBean {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(RedisLockManager.class);
 	private final UUID uuid = UUID.randomUUID();
@@ -75,4 +76,18 @@ public class RedisLockManager {
 		this.groupName = groupName;
 	}
 
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		if (groupName == null || groupName.isEmpty()) {
+			throw new IllegalArgumentException("groupName can't be null or empty");
+		}
+		if (redisTemplate == null) {
+			throw new IllegalArgumentException("redisTemplate can't be null");
+		}
+		if (container == null) {
+			throw new IllegalArgumentException("messageListenerContainer can't be null");
+		}
+	}
+
+	
 }

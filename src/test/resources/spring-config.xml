@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p" xmlns:idworker="http://code.imadcn.com/schema/idworker"
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p" xmlns:lock="http://code.imadcn.com/schema/lock"
 	xsi:schemaLocation="
 		http://www.springframework.org/schema/beans 
 		http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context 
 		http://www.springframework.org/schema/context/spring-context.xsd
-		http://code.imadcn.com/schema/idworker
-		http://code.imadcn.com/schema/idworker/idworker.xsd">
+		http://code.imadcn.com/schema/lock
+		http://code.imadcn.com/schema/lock/lock.xsd">
 		
 	<!-- redis pool -->
 	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
@@ -17,14 +17,13 @@
 	<!-- redis sentinel -->
 	<bean id="redisSentinelConfig" class="com.imadcn.framework.lock.config.RedisSentinelConfig">
 		<property name="masterName" value="mymaster" />
-		<property name="sentinelAddrs" value="${redis.sentinel.nodes}" />
+		<property name="sentinelAddrs" value="127.0.0.1:26380,127.0.0.1:26381,127.0.0.1:26382" />
 	</bean>
 
 	<!-- redis connectionFactory -->
 	<bean id="connectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory" destroy-method="destroy">
 		<constructor-arg index="0" ref="redisSentinelConfig" />
 		<constructor-arg index="1" ref="jedisPoolConfig" />
-		<property name="password" value="${redis.sentinel.words}" />
 	</bean>
 
 	<bean id="stringRedisSerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer" />
@@ -44,5 +43,5 @@
 		<property name="topicSerializer" ref="stringRedisSerializer" />
 	</bean>
 		
-	<lock:config id="lockManager" group="physical-exam"/>
+	<lock:config id="lockManager" group="physical-exam" redisTemplate="redisTemplate" messageContainer="redisMessageListenerContainer"/>
 </beans>

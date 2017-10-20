@@ -16,7 +16,7 @@ public class RedisSentinelConfig extends RedisSentinelConfiguration implements I
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.master(masterName);
-		String[] sentinelAddrArray = sentinelAddrs.split(";");
+		String[] sentinelAddrArray = sentinelAddrs.split(",");
 		for (String sentinelAddr : sentinelAddrArray) {
 			String host = sentinelAddr.split(":")[0];
 			int port = Integer.parseInt(sentinelAddr.split(":")[1]);
