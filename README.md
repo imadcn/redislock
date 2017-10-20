@@ -9,7 +9,7 @@
 redislock 是一个基于Redis的分布式可重入锁
 
 ### 怎么用
-#### Maven
+#### maven
 
 ```xml
 <dependency>
