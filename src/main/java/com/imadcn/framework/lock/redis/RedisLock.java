@@ -6,7 +6,7 @@ import java.util.concurrent.locks.Lock;
  * 基于redis的分布式锁
  * @author imadcn
  */
-public interface RedisLock extends Lock {
+public interface RedisLock extends Lock, AutoCloseable {
 	
 	/**
 	 * 判断是否已经被任线程锁定

@@ -42,6 +42,7 @@ public class ReentrantRedisLock implements RedisLock, Serializable  {
 	final UUID uuid;
 	final String groupName; // 功能组名字
 	private String key; //rediskey Name;
+	private boolean locked;
 	
 	/**
 	 * 可重入的分布式锁, 基于redis
@@ -76,7 +77,8 @@ public class ReentrantRedisLock implements RedisLock, Serializable  {
 	@Override
 	public boolean tryLock() {
 		try {
-			return tryLock(-1, DEFAULT_LEASE_TIME, TimeUnit.MILLISECONDS);
+			locked = tryLock(-1, DEFAULT_LEASE_TIME, TimeUnit.MILLISECONDS);
+			return locked;
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
@@ -102,6 +104,7 @@ public class ReentrantRedisLock implements RedisLock, Serializable  {
 	protected void lockInterruptibly(long leaseTime, TimeUnit unit) throws InterruptedException { 
 		Long ttl = tryAcquire(leaseTime, unit); // 尝试锁定，成功返回null，已被占用则返回被占用资源剩下锁定时间
 		if (ttl == null) { // lock acquired
+			locked = true;
 			return;
 		}
 		RedisLockEntry subscribeEntry = subscribe(); // 添加pubsub功能，监听解锁时间
@@ -109,6 +112,7 @@ public class ReentrantRedisLock implements RedisLock, Serializable  {
 			while(true) {
 				ttl = tryAcquire(leaseTime, unit);
 				if (ttl == null) { // lock acquired
+					locked = true;
 					break;
 				}
 				RedisLockEntry entry = PUBSUB.getEntry(getEntryName()); // 用于触发解锁事件操作的实例
@@ -186,6 +190,7 @@ public class ReentrantRedisLock implements RedisLock, Serializable  {
 			throw new IllegalMonitorStateException("attempt to unlock lock, not locked by current thread by node id: " + uuid + " thread-id: " + Thread.currentThread().getId());
 		}
 		if (eval == 1) { // 解锁成功，取消生命周期时常刷新task
+			locked = false; // 重入递归完成结束，才认为是完全释放了锁资源
 			cancelExpirationRenewal();
 		}
 	}
@@ -311,6 +316,13 @@ public class ReentrantRedisLock implements RedisLock, Serializable  {
 	
 	public void setRedisTemplate(RedisTemplate<Object, Object> redisTemplate) {
 		this.redisTemplate = redisTemplate;
+	}
+	
+	@Override
+	public void close() throws Exception {
+		if (locked) {
+			unlock();
+		}
 	}
 
 	@SuppressWarnings("unchecked")
