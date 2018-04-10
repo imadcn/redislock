@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.imadcn.framework</groupId>
 	<artifactId>lock</artifactId>
-	<version>1.0.1</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>distributed redis reentrant lock</description>
@@ -47,8 +47,8 @@
 		<cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
 		<coveralls-maven-plugin.version>4.1.0</coveralls-maven-plugin.version>
 
-		<dep.springframework.version>4.2.6.RELEASE</dep.springframework.version>
-		<dep.spring-data-redis.version>1.7.3.RELEASE</dep.spring-data-redis.version>
+		<dep.springframework.version>4.3.15.RELEASE</dep.springframework.version>
+		<dep.spring-data-redis.version>1.8.11.RELEASE</dep.spring-data-redis.version>
 		<dep.jedis.version>2.9.0</dep.jedis.version>
 	</properties>
 
